@@ -85,6 +85,7 @@ def CME_VI(states,rewards,alphas,gamma=0.99,theta=0.001,max_val_iter=10000,err=n
         val_iter = val_iter_d
         deltas = cupy.asnumpy(cupy.array(deltas_d))
 
+    deltas_pol = []
 
     return V,policy,val_iter,deltas,deltas_pol
 
