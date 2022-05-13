@@ -1,6 +1,6 @@
 # %%
 import numpy as np
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 from scipy.spatial.distance import pdist, squareform, cdist
 from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.neighbors import NearestNeighbors
@@ -8,7 +8,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from kernel_MDP import *
 
-import gym
+#import gym
 
 from tqdm.notebook import tqdm
 
