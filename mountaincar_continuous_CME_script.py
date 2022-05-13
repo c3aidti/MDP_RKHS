@@ -17,6 +17,10 @@ import math
 
 import pickle as pkl
 
+import time
+
+t1 = time.perf_counter()
+
 num_agents = 1
 dataset_len = 4000
 lam = 1
@@ -142,3 +146,6 @@ V,policy,val_iter,deltas,deltas_pol = CME_VI(Y,costs_Y,alphas,gamma=0.999,theta=
 
 with open("mountaincar_continuous_CME_output.pkl", "wb") as out_file:
     pkl.dump([X_fit,X_scaler,actions,W,gamma_k,V], out_file)
+
+t2 = time.perf_counter()
+print("Time: ", (t2-t1))

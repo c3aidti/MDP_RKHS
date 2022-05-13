@@ -4,6 +4,9 @@ from tqdm.notebook import tqdm
 import copy
 from sklearn.neighbors import NearestNeighbors
 
+import cupy
+
+
 def angle_normalize(x):
     return ((x + np.pi) % (2 * np.pi)) - np.pi
 
@@ -40,40 +43,52 @@ def calc_rewards_Gaussian(states,actions,rewards_all):
             rewards[k][i] = rewards_all[x][y] 
     return rewards
 
+
+
+
+
+
+
+## re-writing CME_VI to run on the GPU
 def CME_VI(states,rewards,alphas,gamma=0.99,theta=0.001,max_val_iter=10000,err=np.infty,V_init=None):
     n_state = states.shape[0]
     if not V_init:
         V = np.zeros((n_state,1))
 
-    print('n_state '+str(n_state))
-
-    val_iter = 0
-    deltas = []
-    deltas_pol = []
-
     policy = np.zeros(n_state)
 
-    while val_iter<max_val_iter and err>theta:
-        if not val_iter%100:
-            print('CME_VI iteration '+str(val_iter))
-            print(err)
-        V_temp = np.zeros_like(V)
-        buffer = rewards + gamma*np.squeeze(alphas@V)
-        V_temp = np.min(buffer,axis=1)
-        # if not val_iter%100:
-        #     print(len(np.where(policy==np.argmin(buffer,axis=1))[0]))
-        # deltas_pol.append(np.max(np.abs(policy-np.argmin(buffer,axis=1))))
-        policy = np.argmin(buffer,axis=1)
-        err = np.max(np.abs(V-V_temp))
-        # print(deltas_pol)
-        # deltas[val_iter] = err
-        deltas.append(err)
-        V = V_temp
-        # V = copy.deepcopy(V_temp)
-        val_iter = val_iter+1
-    
+    with cupy.cuda.Device(0):
+        max_val_iter_d = max_val_iter
+        theta_d = theta
+        deltas_d = []
+        val_iter_d = 0
+        V_d = cupy.asarray(V)
+        policy_d = cupy.asarray(policy)
+        alphas_d = cupy.asarray(alphas)
+        rewards_d = cupy.asarray(rewards)
+
+        while val_iter_d < max_val_iter_d and err > theta_d:
+            if not val_iter_d%100:
+                print('CME_VI iteration ', val_iter_d)
+                print(err)
+            V_temp = cupy.zeros_like(V_d)
+            buffer = rewards_d + gamma*cupy.squeeze(alphas_d@V_d)
+            V_temp = cupy.min(buffer,axis=1)
+            policy_d = cupy.argmin(buffer,axis=1)
+            err = cupy.max(cupy.abs(V_d-V_temp))
+            deltas_d.append(err)
+            V_d = V_temp
+            val_iter_d = val_iter_d +1
+
+        V = cupy.asnumpy(V_d)
+        policy = cupy.asnumpy(policy)
+        val_iter = val_iter_d
+        deltas = cupy.asnumpy(cupy.array(deltas_d))
+
+
     return V,policy,val_iter,deltas,deltas_pol
-# print('Agent '+str(j)+' iterations: '+str(val_iter))
+
+    
 
 def Gaussian_MDP(rew_sigma,grid_dim=50,success_prob=0.8,):
 
