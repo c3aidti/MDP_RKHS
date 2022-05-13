@@ -40,7 +40,6 @@ def calc_rewards_Gaussian(states,actions,rewards_all):
             rewards[k][i] = rewards_all[x][y] 
     return rewards
 
-@profile
 def CME_VI(states,rewards,alphas,gamma=0.99,theta=0.001,max_val_iter=10000,err=np.infty,V_init=None):
     n_state = states.shape[0]
     if not V_init:
