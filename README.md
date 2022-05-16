@@ -1,4 +1,4 @@
-# Profiling Results
+# Optimization Results
 
 Time-based profiling after porting `CMI_VE` to the GPU shows that
 
